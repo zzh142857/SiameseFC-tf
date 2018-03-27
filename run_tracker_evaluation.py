@@ -48,24 +48,24 @@ def main():
                                                                      target_w, target_h, final_score_sz, filename,
                                                                      image, templates_z, scores, start_frame)
                 lengths[idx], precisions[idx], precisions_auc[idx], ious[idx] = _compile_results(gt_, bboxes, evaluation.dist_threshold)
-                print str(i) + ' -- ' + videos_list[i] + \
+                print(str(i) + ' -- ' + videos_list[i] + \
                 ' -- Precision: ' + "%.2f" % precisions[idx] + \
                 ' -- Precisions AUC: ' + "%.2f" % precisions_auc[idx] + \
                 ' -- IOU: ' + "%.2f" % ious[idx] + \
-                ' -- Speed: ' + "%.2f" % speed[idx] + ' --'
-                print
+                ' -- Speed: ' + "%.2f" % speed[idx] + ' --')
+                
 
         tot_frames = np.sum(lengths)
         mean_precision = np.sum(precisions * lengths) / tot_frames
         mean_precision_auc = np.sum(precisions_auc * lengths) / tot_frames
         mean_iou = np.sum(ious * lengths) / tot_frames
         mean_speed = np.sum(speed * lengths) / tot_frames
-        print '-- Overall stats (averaged per frame) on ' + str(nv) + ' videos (' + str(tot_frames) + ' frames) --'
-        print ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % mean_precision +\
+        print('-- Overall stats (averaged per frame) on ' + str(nv) + ' videos (' + str(tot_frames) + ' frames) --')
+        print(' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % mean_precision +\
               ' -- Precisions AUC: ' + "%.2f" % mean_precision_auc +\
               ' -- IOU: ' + "%.2f" % mean_iou +\
-              ' -- Speed: ' + "%.2f" % mean_speed + ' --'
-        print
+              ' -- Speed: ' + "%.2f" % mean_speed + ' --')
+        
 
     else:
         gt, frame_name_list, _, _ = _init_video(env, evaluation, evaluation.video)
@@ -73,12 +73,12 @@ def main():
         bboxes, speed = tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
                                 filename, image, templates_z, scores, evaluation.start_frame)
         _, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
-        print evaluation.video + \
+        print(evaluation.video + \
               ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % precision +\
               ' -- Precision AUC: ' + "%.2f" % precision_auc + \
               ' -- IOU: ' + "%.2f" % iou + \
-              ' -- Speed: ' + "%.2f" % speed + ' --'
-        print
+              ' -- Speed: ' + "%.2f" % speed + ' --')
+        
 
 
 def _compile_results(gt, bboxes, dist_threshold):
@@ -172,3 +172,4 @@ def _compute_iou(boxA, boxB):
 
 if __name__ == '__main__':
     sys.exit(main())
+
