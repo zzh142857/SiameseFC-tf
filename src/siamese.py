@@ -50,14 +50,19 @@ def build_tracking_graph(final_score_sz, design, env):
     frame_padded_z = tf.cast(frame_padded_z, tf.float32)
     # extract tensor of z_crops
     z_crops = extract_crops_z(frame_padded_z, npad_z, pos_x_ph, pos_y_ph, z_sz_ph, design.exemplar_sz)
+
     frame_padded_x, npad_x = pad_frame(image, frame_sz, pos_x_ph, pos_y_ph, x_sz2_ph, avg_chan)
     frame_padded_x = tf.cast(frame_padded_x, tf.float32)
     # extract tensor of x_crops (3 scales)
     x_crops = extract_crops_x(frame_padded_x, npad_x, pos_x_ph, pos_y_ph, x_sz0_ph, x_sz1_ph, x_sz2_ph, design.search_sz)
+
     # use crops as input of (MatConvnet imported) pre-trained fully-convolutional Siamese net
     template_z, templates_x, p_names_list, p_val_list = _create_siamese(os.path.join(env.root_pretrained,design.net), x_crops, z_crops)
+    print("shape of z:", template_z.get_shape().as_list())
+    print("shape of x:", templates_x.get_shape().as_list())
     template_z = tf.squeeze(template_z)
     templates_z = tf.stack([template_z, template_z, template_z])
+    print("shape of zssss:", templates_z.get_shape().as_list())
     # compare templates via cross-correlation
     scores = _match_templates(templates_z, templates_x, p_names_list, p_val_list)
     # upsample the score maps
@@ -151,10 +156,13 @@ def _match_templates(net_z, net_x, params_names_list, params_values_list):
     net_z = tf.reshape(net_z, (Hz, Wz, B*C, 1))
     net_x = tf.reshape(net_x, (1, Hx, Wx, B*C))
     net_final = tf.nn.depthwise_conv2d(net_x, net_z, strides=[1,1,1,1], padding='VALID')
+    #print("shape of net:", net_final.get_shape().as_list())
     # final is [1, Hf, Wf, BC]
     net_final = tf.concat(tf.split(net_final, 3, axis=3), axis=0)
+    #print("shape of net_cat:", net_final.get_shape().as_list())
     # final is [B, Hf, Wf, C]
     net_final = tf.expand_dims(tf.reduce_sum(net_final, axis=3), axis=3)
+    #print("shape of net_final:", net_final.get_shape().as_list())
     # final is [B, Hf, Wf, 1]
     if _bnorm_adjust:
         bn_beta = params_values_list[params_names_list.index('fin_adjust_bnb')]

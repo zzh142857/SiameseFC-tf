@@ -14,10 +14,10 @@ def region_to_bbox(region, center=True):
 def _rect(region, center):
     
     if center:
-        x = region[0]
-        y = region[1]
-        w = region[2]
-        h = region[3]
+        x = float(region[0])
+        y = float(region[1])
+        w = float(region[2])
+        h = float(region[3])
         cx = x+w/2
         cy = y+h/2
         return cx, cy, w, h

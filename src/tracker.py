@@ -30,7 +30,7 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, 
     penalty = penalty / np.sum(penalty)
 
     context = design.context*(target_w+target_h)
-    z_sz = np.sqrt(np.prod((target_w+context)*(target_h+context)))
+    z_sz = np.sqrt(np.prod((target_w+context)*(target_h+context)))#(w +2p)*(h+2p)
     x_sz = float(design.search_sz) / design.exemplar_sz * z_sz
 
     # thresholds to saturate patches shrinking/growing
