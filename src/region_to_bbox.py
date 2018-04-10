@@ -10,6 +10,16 @@ def region_to_bbox(region, center=True):
     else:
         return _poly(region, center)
 
+def region_to_bbox_normalized(region, width, height, center=True):
+
+    n = len(region)
+    assert n==4 or n==8, ('GT region format is invalid, should have 4 or 8 entries.')
+
+    if n==4:
+        return _rect_normalized(region, center, width, height)
+    else:
+        return _poly(region, center)
+
 # we assume the grountruth bounding boxes are saved with 0-indexing
 def _rect(region, center):
     
@@ -26,7 +36,21 @@ def _rect(region, center):
         #region[1] -= 1
         return region
 
-
+def _rect_normalized(region, center, width, height):
+    
+    if center:
+        
+        x = float(region[0])
+        y = float(region[1])
+        w = float(region[2])
+        h = float(region[3])
+        cx = x+w/2
+        cy = y+h/2
+        return cx / width, cy / height, w / width, h / height
+    else:
+        #region[0] -= 1
+        #region[1] -= 1
+        return region
 def _poly(region, center):
     cx = np.mean(region[::2])
     cy = np.mean(region[1::2])

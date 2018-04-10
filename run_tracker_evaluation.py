@@ -9,6 +9,23 @@ from src.parse_arguments import parse_arguments
 from src.region_to_bbox import region_to_bbox
 
 
+"""
+    tracking procedure:
+    1,input a image sequence of a vedio
+    2,z = first frame
+    3,x = next img
+    4,pad and crop z,x, generate three version of diffenrent scale(crop to different size and rescale to a certain size)
+    5,calculate score map * 3
+    6,fetch the max score and update size(for step 4)(scale)
+    7,cosine window
+    8,update pos_x, pos_y
+    9,z = x, with new size, pos_x, pos_y
+    10,goto step 3
+
+"""
+
+
+
 def main():
     # avoid printing TF debugging information
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'

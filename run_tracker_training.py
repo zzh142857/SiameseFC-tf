@@ -4,9 +4,23 @@ import os
 import numpy as np
 from PIL import Image
 import src.siamese as siam
-from src.tracker import tracker
+from src.trainer import trainer
 from src.parse_arguments import parse_arguments
 from src.region_to_bbox import region_to_bbox
+from src.prepare_training_dataset import run_load
+import tensorflow as tf
+
+
+
+"""
+    training procedure:
+    1,input z, x, pos_x, pos_y, w, d and gt of x
+    2,pad and crop z,x, generate only one version
+    3,calculate score map
+    4,calculate loss
+    5,bp, update variable
+"""
+
 
 
 def main():
@@ -21,8 +35,16 @@ def main():
     # [1 4 7] => [1 1 2 3 4 5 6 7 7]  (length 3*3)
     final_score_sz = hp.response_up * (design.score_sz - 1) + 1
     # build TF graph once for all
-    filename, image, templates_z, scores = siam.build_tracking_graph(final_score_sz, design, env)
+    #filename, image, templates_z, scores = siam.build_tracking_graph(final_score_sz, design, env)
+    image, templates_z, scores, loss, train_step = siam.build_tracking_graph_train(final_score_sz, design, env, hp, 5, 700, 700, 3, 5)
+    
 
+    z, x, z_pos_x, z_pos_y, z_target_w, z_target_h, x_pos_x, x_pos_y, x_target_w, x_target_h = run_load("data", "train", "output", 700, 700, num_epochs = 2, batch_size = 5)
+    
+
+    trainer(hp, run, design, 33, 5, z, x, z_pos_x, z_pos_y, z_target_w, z_target_h, x_pos_x, x_pos_y, x_target_w, x_target_h, image, templates_z, scores, loss, train_step)
+ 
+"""
     # iterate through all videos of evaluation.dataset
     if evaluation.video == 'all':
         dataset_folder = os.path.join(env.root_dataset, evaluation.dataset)
@@ -78,7 +100,7 @@ def main():
               ' -- Precision AUC: ' + "%.2f" % precision_auc + \
               ' -- IOU: ' + "%.2f" % iou + \
               ' -- Speed: ' + "%.2f" % speed + ' --')
-        
+       """ 
 
 
 def _compile_results(gt, bboxes, dist_threshold):
@@ -120,7 +142,7 @@ def _init_video(env, evaluation, video):
     frame_name_list = [os.path.join(env.root_dataset, evaluation.dataset, video, '') + s for s in frame_name_list]
     frame_name_list.sort()
     with Image.open(frame_name_list[0]) as img:
-        frame_sz = np.asarray(img.size) #im.size ⇒ (width, height)
+        frame_sz = np.asarray(img.size) #im.size  (width, height)
         frame_sz[1], frame_sz[0] = frame_sz[0], frame_sz[1]
 
     # read the initialization from ground truth
