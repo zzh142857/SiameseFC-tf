@@ -4,24 +4,27 @@ import os
 import numpy as np
 from PIL import Image
 import src.siamese as siam
-from src.trainer import trainer
+from src.tracker import tracker_v2
 from src.parse_arguments import parse_arguments
 from src.region_to_bbox import region_to_bbox
-from src.read_training_dataset import read_tfrecord
-import tensorflow as tf
-
 
 
 """
-    training procedure:
-    1,input z, x, pos_x, pos_y, w, d and gt of x
-    2,pad and crop z,x, generate only one version
-    3,calculate score map
-    4,calculate loss
-    5,bp, update variable
+    tracking procedure:
+    1,input a image sequence of a vedio
+    2,z = first frame
+    3,x = next img
+    4,pad and crop z,x, generate three version of diffenrent scale(crop to different size and rescale to a certain size)
+    5,calculate score map * 3
+    6,fetch the max score and update size(for step 4)(scale)
+    7,cosine window
+    8,update pos_x, pos_y
+    9,z = x, with new size, pos_x, pos_y
+    10,goto step 3
+
 """
 
-tfrecord_filename = ""
+
 
 def main():
     # avoid printing TF debugging information
@@ -35,24 +38,8 @@ def main():
     # [1 4 7] => [1 1 2 3 4 5 6 7 7]  (length 3*3)
     final_score_sz = hp.response_up * (design.score_sz - 1) + 1
     # build TF graph once for all
-    #filename, image, templates_z, scores = siam.build_tracking_graph(final_score_sz, design, env)
-    batch_size = 5
-    num_epochs = 50
-    channel = 3
-    resize_width = 700
-    resize_height = 700
+    image, templates_z, scores, loss, _ = siam.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz = [700, 700, 3], input_batch_size = 1)
 
-    frame_sz = [resize_width, resize_height, channel]
-
-    image, templates_z, scores, loss, train_step = siam.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz, batch_size)
-    
-    batched_data = run_load("data", "train", "output", resize_width, resize_height, num_epochs = num_epochs, batch_size = batch_size)
-    batched_data = read_tfrecord(filename, num_epochs = num_epochs, batch_size = batch_size)
-    
-
-    trainer(hp, run, design, final_score_sz, batch_size,  image, templates_z, scores, loss, train_step, batched_data)
- 
-"""
     # iterate through all videos of evaluation.dataset
     if evaluation.video == 'all':
         dataset_folder = os.path.join(env.root_dataset, evaluation.dataset)
@@ -74,9 +61,9 @@ def main():
                 frame_name_list_ = frame_name_list[start_frame:]
                 pos_x, pos_y, target_w, target_h = region_to_bbox(gt_[0]) # coordinate of gt is the bottom left point of the bbox
                 idx = i * evaluation.n_subseq + j
-                bboxes, speed[idx] = tracker(hp, run, design, frame_name_list_, pos_x, pos_y,
-                                                                     target_w, target_h, final_score_sz, filename,
-                                                                     image, templates_z, scores, start_frame)
+                bboxes, speed[idx] = tracker_v2(hp, run, design, frame_name_list_, pos_x, pos_y,
+                                                                     target_w, target_h, final_score_sz, 
+                                                                     image, templates_z, scores, start_frame, resize_width = 700, resize_height = 700)
                 lengths[idx], precisions[idx], precisions_auc[idx], ious[idx] = _compile_results(gt_, bboxes, evaluation.dist_threshold)
                 print(str(i) + ' -- ' + videos_list[i] + \
                 ' -- Precision: ' + "%.2f" % precisions[idx] + \
@@ -100,15 +87,15 @@ def main():
     else:
         gt, frame_name_list, _, _ = _init_video(env, evaluation, evaluation.video)
         pos_x, pos_y, target_w, target_h = region_to_bbox(gt[evaluation.start_frame])
-        bboxes, speed = tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
-                                filename, image, templates_z, scores, evaluation.start_frame)
+        bboxes, speed = tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
+                                image, templates_z, scores, evaluation.start_frame, resize_width = 700, resize_height = 700)
         _, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
         print(evaluation.video + \
               ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % precision +\
               ' -- Precision AUC: ' + "%.2f" % precision_auc + \
               ' -- IOU: ' + "%.2f" % iou + \
               ' -- Speed: ' + "%.2f" % speed + ' --')
-       """ 
+        
 
 
 def _compile_results(gt, bboxes, dist_threshold):
@@ -150,7 +137,7 @@ def _init_video(env, evaluation, video):
     frame_name_list = [os.path.join(env.root_dataset, evaluation.dataset, video, '') + s for s in frame_name_list]
     frame_name_list.sort()
     with Image.open(frame_name_list[0]) as img:
-        frame_sz = np.asarray(img.size) #im.size  (width, height)
+        frame_sz = np.asarray(img.size) #im.size ⇒ (width, height)
         frame_sz[1], frame_sz[0] = frame_sz[0], frame_sz[1]
 
     # read the initialization from ground truth
