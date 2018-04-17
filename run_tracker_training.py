@@ -36,21 +36,17 @@ def main():
     final_score_sz = hp.response_up * (design.score_sz - 1) + 1
     # build TF graph once for all
     #filename, image, templates_z, scores = siam.build_tracking_graph(final_score_sz, design, env)
-    batch_size = 5
     num_epochs = 50
-    channel = 3
-    resize_width = 700
-    resize_height = 700
-
-    frame_sz = [resize_width, resize_height, channel]
-
-    image, templates_z, scores, loss, train_step = siam.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz, batch_size)
-    
-    batched_data = run_load("data", "train", "output", resize_width, resize_height, num_epochs = num_epochs, batch_size = batch_size)
-    batched_data = read_tfrecord(filename, num_epochs = num_epochs, batch_size = batch_size)
     
 
-    trainer(hp, run, design, final_score_sz, batch_size,  image, templates_z, scores, loss, train_step, batched_data)
+    frame_sz = [design.resize_width, design.resize_height, design.channel]
+    siamNet = siam.Siamese(design.batch_size)
+    image, z_crops, x_crops, templates_z, scores, loss, train_step, distance_to_gt = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz)
+ 
+    batched_data = read_tfrecord("./output/train.tfrecords", num_epochs = design.num_epochs, batch_size = design.batch_size)
+    
+
+    trainer(hp, run, design, final_score_sz, image, templates_z, scores, loss, train_step, distance_to_gt, batched_data, z_crops, x_crops, siamNet)
  
 """
     # iterate through all videos of evaluation.dataset
