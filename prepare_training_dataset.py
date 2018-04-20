@@ -28,13 +28,13 @@ def transform2tfrecord(data_folder, tfrecord_name, output_directory, resize_widt
     cur_dir = os.getcwd()
     data_folder = os.path.join(cur_dir, data_folder)
     #get a list of dirs in data_folder, in each of which contains a training vedio
-    vedio_folder_list = [dir for dir in os.listdir(data_folder) if not os.path.isfile(os.path.join(data_folder, dir))][:78]
+    vedio_folder_list = sorted([dir for dir in os.listdir(data_folder) if not os.path.isfile(os.path.join(data_folder, dir))])[:1]
 
     for vedio_folder in vedio_folder_list:
         vedio_folder = os.path.join(data_folder, vedio_folder)
         #get a list of dirs in data_folder, in each of which contains a training vedio
         file_list = [dir for dir in os.listdir(vedio_folder) if os.path.isfile(os.path.join(vedio_folder, dir))]
-        img_list = [file for file in file_list if file.endswith(".jpg")]
+        img_list = sorted([file for file in file_list if file.endswith(".jpg")])
         gt_file_name = "groundtruth.txt"
         assert os.path.exists(os.path.join(vedio_folder, gt_file_name))
         
