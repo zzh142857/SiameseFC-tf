@@ -43,7 +43,7 @@ def main():
     siamNet = siam.Siamese(design.batch_size)
     image, z_crops, x_crops, templates_z, scores, loss, train_step, distance_to_gt, summary, tz , max_pos_x, max_pos_y= siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz)
  
-    batched_data = read_tfrecord("./output/train_single_vedio", num_epochs = design.num_epochs, batch_size = design.batch_size)
+    batched_data = read_tfrecord("./output/train_5_vedio", num_epochs = design.num_epochs, batch_size = design.batch_size)
     
 
     trainer(hp, run, design, final_score_sz, image, templates_z, scores, loss, train_step, distance_to_gt, batched_data, z_crops, x_crops, siamNet, summary, tz, max_pos_x, max_pos_y)

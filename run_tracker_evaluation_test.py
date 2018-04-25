@@ -28,7 +28,7 @@ import cv2
 
 
 
-def main(step = 5000):
+def main(step = 1000):
 	# avoid printing TF debugging information
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 	# TODO: allow parameters from command line or leave everything in json files?
@@ -41,7 +41,7 @@ def main(step = 5000):
 	final_score_sz = hp.response_up * (design.score_sz - 1) + 1
 	# build TF graph once for all
 	siamNet = siam.Siamese(batch_size = 1);
-	image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary, templates_x, max_pos_x, max_pos_y = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz = [480, 640, 3])
+	image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary, templates_x, max_pos_x, max_pos_y = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz = [720, 1280, 3])
 
 	# iterate through all videos of evaluation.dataset
 	if evaluation.video == 'all':
@@ -91,7 +91,7 @@ def main(step = 5000):
 		gt, frame_name_list, _, _ = _init_video(env, evaluation, evaluation.video)
 		pos_x, pos_y, target_w, target_h = region_to_bbox(gt[evaluation.start_frame])
 		bboxes, speed = tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
-			                    image, templates_z, scores, evaluation.start_frame,  path_ckpt = design.path_ckpt + "-" + str(step), siamNet = siamNet)
+			                    image, templates_z, scores, evaluation.start_frame,  path_ckpt = design.path_ckpt_test + "-" + str(step), siamNet = siamNet)
 		_, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
 		print(evaluation.video + \
 			  ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % precision +\

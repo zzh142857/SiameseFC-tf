@@ -4,13 +4,13 @@ The code is revised on the base of the evaluation-only version code from the rep
 
 ## Preparation
 1) Clone the repository
-`git clone https://github.com/zzh142857/SiameseFC-tf.git`
+`git clone https://github.com/zzh142857/SiameseFC-tf.git`   
 2)The code is prepared for a environment with Python==3.6 and Tensorflow-gpu==1.6 with the required CUDA and CudNN library.   
 3)Other packages can be installed by:   
-`sudo pip install -r requirements.txt`
-4)Download training data
+`sudo pip install -r requirements.txt`   
+4)Download training data   
 cd to the directory where this README.md file located, then:
-`mkdir data`
+`mkdir data`   
 Download [video sequences](https://drive.google.com/file/d/0B7Awq_aAemXQSnhBVW5LNmNvUU0/view) in `data` and unzip the archive.
 
 
@@ -21,10 +21,10 @@ Download [video sequences](https://drive.google.com/file/d/0B7Awq_aAemXQSnhBVW5L
 1) Call the main script (within an active virtualenv session)
 `python run_tracker_evaluation.py`
 
-## Author
+## Author of this repository
 **Zhenghao Zhao**
 
-## Authors of the original paper and code
+## Authors of the original paper
 * [**Luca Bertinetto**](https://www.robots.ox.ac.uk/~luca)
 * [**Jack Valmadre**](http://jack.valmadre.net)
 
