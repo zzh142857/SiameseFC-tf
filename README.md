@@ -1,27 +1,17 @@
-# SiamFC - TensorFlow
-TensorFlow port of the tracking method described in the paper [*Fully-Convolutional Siamese nets for object tracking*](https://www.robots.ox.ac.uk/~luca/siamese-fc.html).
+# SiamFC-tf
+This repository is the tensorflow implementation of both training and evaluation of SiamFC described in the paper [*Fully-Convolutional Siamese nets for object tracking*](https://www.robots.ox.ac.uk/~luca/siamese-fc.html).   
+The code is revised on the base of the evaluation only version from the repository of the auther of this paper(https://github.com/torrvision/siamfc-tf).
 
-In particular, it is the improved version presented as baseline in [*End-to-end representation learning for Correlation Filter based tracking*](https://www.robots.ox.ac.uk/~luca/cfnet.html), which achieves state-of-the-art performance at high framerate. The other methods presented in the paper (similar performance, shallower network) haven't been ported yet.
-
-**Note1**: results should be similar (i.e. slightly better or worse) than our MatConvNet implementation. However, for direct comparison please refer to the precomputed results available in the project pages or to the original code, which you can find pinned in [my GitHub](https://github.com/bertinetto).
-
-**Note2**: at the moment this code only allows to use a pretrained net in forward mode.
-
-## Settings things up with virtualenv
-1) Get virtualenv if you don't have it already
-`pip install virtualenv`
-1) Create new virtualenv with Python 2.7
-`virtualenv --python=/usr/bin/python2.7 ve-tracking`
-1) Activate the virtualenv
-`source ~/tracking-ve/bin/activate`
+## Preparation
 1) Clone the repository
-`git clone https://github.com/torrvision/siamfc-tf.git`
-1) `cd siamfc-tf`
-1) Install the required packages
+`git clone https://github.com/zzh142857/SiameseFC-tf.git`
+2)The code is prepared for a environment with Python==3.6 and Tensorflow-gpu==1.6 with the required CUDA and CudNN library.   
+3)Other packages can be installed by:   
 `sudo pip install -r requirements.txt`
-1) `mkdir pretrained data`
-1) Download the [pretrained networks](https://bit.ly/cfnet_networks) in `pretrained` and unzip the archive (we will only use `baseline-conv5_e55.mat`)
-1) Download [video sequences](https://drive.google.com/file/d/0B7Awq_aAemXQSnhBVW5LNmNvUU0/view) in `data` and unzip the archive.
+4)Download training data
+cd to the directory where this README.md file located, then:
+`mkdir data`
+Download [video sequences](https://drive.google.com/file/d/0B7Awq_aAemXQSnhBVW5LNmNvUU0/view) in `data` and unzip the archive.
 
 
 ## Running the tracker
@@ -31,8 +21,10 @@ In particular, it is the improved version presented as baseline in [*End-to-end 
 1) Call the main script (within an active virtualenv session)
 `python run_tracker_evaluation.py`
 
-## Authors
+## Author
+**Zhenghao Zhao**
 
+## Authors of the original paper and code
 * [**Luca Bertinetto**](https://www.robots.ox.ac.uk/~luca)
 * [**Jack Valmadre**](http://jack.valmadre.net)
 
