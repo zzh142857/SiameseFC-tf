@@ -28,7 +28,7 @@ import cv2
 
 
 
-def main(step = 5000):
+def main(step = 15000):
 	# avoid printing TF debugging information
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 	# TODO: allow parameters from command line or leave everything in json files?
@@ -41,7 +41,7 @@ def main(step = 5000):
 	final_score_sz = hp.response_up * (design.score_sz - 1) + 1
 	# build TF graph once for all
 	siamNet = siam.Siamese(batch_size = 1);
-	image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary, templates_x, max_pos_x, max_pos_y = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz = [480, 640, 3])
+	image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary, templates_x, max_pos_x, max_pos_y = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz = [480, 864, 3])
 
 	# iterate through all videos of evaluation.dataset
 	if evaluation.video == 'all':
