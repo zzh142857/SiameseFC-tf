@@ -11,7 +11,7 @@ The code is revised on the base of the evaluation-only version code from the rep
 
 
 ## 2 Training Step
-
+Step by step explanation of the whole model and training process.
 ### 2.1 Prepare training data
 One training sample consists of an examplar image: **z**, a search image : **x**, and their correspnding ground truth information: **z_pos_x, z_pos_y, z_target_w, z_target_h and x_pos_x, x_pos_y, x_target_w, x_target_h**. Note the coordinates of the target have been converted to the center of bbox from the lefttop corner through function *src.region_to_bbox.py*. <br>
 <br>
@@ -59,8 +59,9 @@ cd to the directory where this README.md file located, then:
 Download [video sequences](https://drive.google.com/file/d/0B7Awq_aAemXQSnhBVW5LNmNvUU0/view) in `data` and unzip the archive.
 
 ## Training model
-1)Generate tf
-
+1)Generate tfrecord file from training vedio    
+2)Execute training scripts 
+`python run_tracker_training.py`
 
 ## Running the tracker
 1) Set `video` from `parameters.evaluation` to `"all"` or to a specific sequence (e.g. `"vot2016_ball1"`)
