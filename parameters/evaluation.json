@@ -2,7 +2,7 @@
 	"n_subseq": 3,
 	"dist_threshold": 20,
 	"stop_on_failure": 0,
-	"dataset": "validation",
-	"video": "vot2016_ball1",
+	"dataset": "vedio",
+	"video": "tc_Badminton_ce2",
 	"start_frame": 0
 }

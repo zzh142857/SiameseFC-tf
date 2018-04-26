@@ -27,7 +27,7 @@ def prepare_shuffle_data(data_folder, output_filename, output_directory, resize_
     cur_dir = os.getcwd()
     data_folder = os.path.join(cur_dir, data_folder)
     #get a list of dirs in data_folder, in each of which contains a training vedio
-    vedio_folder_list = sorted([dir for dir in os.listdir(data_folder) if not os.path.isfile(os.path.join(data_folder, dir))])[:6]
+    vedio_folder_list = sorted([dir for dir in os.listdir(data_folder) if not os.path.isfile(os.path.join(data_folder, dir))])[:1]
     vedio_index = 0
     output_list = []
     for vedio_folder in vedio_folder_list:
@@ -84,7 +84,7 @@ def prepare_shuffle_data(data_folder, output_filename, output_directory, resize_
 
     
 if __name__ == "__main__":
-    prepare_shuffle_data("data", "train_5_vedio", "output", resize_width = 700, resize_height = 700)
+    prepare_shuffle_data("data", "train_first_vedio", "output", resize_width = 700, resize_height = 700)
 
 
 

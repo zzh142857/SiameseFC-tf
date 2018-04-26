@@ -45,8 +45,9 @@ def pad_frame(im, frame_sz, pos_x, pos_y, patch_sz, avg_chan):
     paddings = [[npad, npad], [npad, npad], [0, 0]]
     im_padded = im
     if avg_chan is not None:
-        print("shape of im and avg_chan: ", im.shape, avg_chan.shape)
+        #print("shape of im and avg_chan: ", im.shape, avg_chan.shape)
         im_padded = im_padded - avg_chan
+    #print("shape of pad image: ", im_padded.shape)
     im_padded = tf.pad(im_padded, paddings, mode='CONSTANT')
     if avg_chan is not None:
         im_padded = im_padded + avg_chan

@@ -40,9 +40,9 @@ def transform2tfrecord(data_file, tfrecord_name, output_directory, resize_width,
             x_target_w = float(x_target_w)
             x_target_h = float(x_target_h)
             z_img = cv2.imread(z)
-            z_img = cv2.resize(z_img, (resize_width,resize_height))
+            #z_img = cv2.resize(z_img, (resize_width,resize_height))
             x_img = cv2.imread(x)
-            x_img = cv2.resize(x_img, (resize_width,resize_height))
+            #x_img = cv2.resize(x_img, (resize_width,resize_height))
             z_raw = z_img.tostring()
             x_raw = x_img.tostring()
             

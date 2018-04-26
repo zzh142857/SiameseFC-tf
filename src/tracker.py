@@ -9,7 +9,7 @@ import csv
 import numpy as np
 from PIL import Image
 import time
-
+import cv2
 import src.siamese as siam
 from src.visualization import show_frame, show_crops, show_scores
 
@@ -18,7 +18,8 @@ from src.visualization import show_frame, show_crops, show_scores
 # os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu_device)
 
 # read default parameters and override with custom ones
-def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz, filename, image, templates_z, scores, start_frame):
+
+def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,  image, templates_z, scores, start_frame,  path_ckpt, siamNet):
     num_frames = np.size(frame_name_list)
     # stores tracker's output for evaluation
     bboxes = np.zeros((num_frames,4))
@@ -46,43 +47,64 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, 
     # }
 
     run_opts = {}
-
+    saver = tf.train.Saver() 
     # with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     with tf.Session() as sess:
-        tf.global_variables_initializer().run()
+        saver.restore(sess, path_ckpt)
+        print("Model restored......")
         # Coordinate the loading of image files.
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
         
         # save first frame position (from ground-truth)
-        bboxes[0,:] = pos_x-target_w/2, pos_y-target_h/2, target_w, target_h                
+        bboxes[0,:] = pos_x-target_w/2, pos_y-target_h/2, target_w, target_h  
 
+
+        z_image = cv2.imread(frame_name_list[0])
+        """
+        cv2.namedWindow('image', cv2.WINDOW_NORMAL)               
+        cv2.rectangle(z_image, (int(pos_x-target_w/2), int(pos_y-target_h/2)), (int( pos_x+target_w/2), int(pos_y+target_h/2)), (255,0,0), 2)
+        cv2.imshow('image',z_image)
+                
+        cv2.waitKey(0)
+        """
+        #z_image = cv2.resize(z_image, (resize_width,resize_height))
+        
         image_, templates_z_ = sess.run([image, templates_z], feed_dict={
-                                                                        siam.pos_x_ph: pos_x,
-                                                                        siam.pos_y_ph: pos_y,
-                                                                        siam.z_sz_ph: z_sz,
-                                                                        filename: frame_name_list[0]})
+                                                                        siamNet.batched_pos_x_ph: [pos_x],
+                                                                        siamNet.batched_pos_y_ph: [pos_y],
+                                                                        siamNet.batched_z_sz_ph: [z_sz],
+                                                                        image: [z_image / 255.  - 0.5]})
         new_templates_z_ = templates_z_
 
         t_start = time.time()
-
+        
         # Get an image from the queue
         for i in range(1, num_frames):        
             scaled_exemplar = z_sz * scale_factors
             scaled_search_area = x_sz * scale_factors
             scaled_target_w = target_w * scale_factors
             scaled_target_h = target_h * scale_factors
+            x_image = cv2.imread(frame_name_list[i])
+
+            #x_image = cv2.resize(x_image, (resize_width,resize_height))
+
             image_, scores_ = sess.run(
                 [image, scores],
                 feed_dict={
-                    siam.pos_x_ph: pos_x,
-                    siam.pos_y_ph: pos_y,
-                    siam.x_sz0_ph: scaled_search_area[0],
-                    siam.x_sz1_ph: scaled_search_area[1],
-                    siam.x_sz2_ph: scaled_search_area[2],
+                    siamNet.batched_pos_x_ph: [pos_x],
+                    siamNet.batched_pos_y_ph: [pos_y],
+                    siamNet.batched_x_sz0_ph: [scaled_search_area[0]],
+                    siamNet.batched_x_sz1_ph: [scaled_search_area[1]],
+                    siamNet.batched_x_sz2_ph: [scaled_search_area[2]],
                     templates_z: np.squeeze(templates_z_),
-                    filename: frame_name_list[i],
+                    image: [x_image / 255. - 0.5],
                 }, **run_opts)
+            """
+            plt.imshow(np.squeeze(scores_[0]), cmap = 'gray')
+            plt.show()
+            plt.pause(5)
+            """
             scores_ = np.squeeze(scores_)
             # penalize change of scale
             scores_[0,:,:] = hp.scale_penalty*scores_[0,:,:]
@@ -99,15 +121,21 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, 
             score_ = score_/np.sum(score_)
             # apply displacement penalty
             score_ = (1-hp.window_influence)*score_ + hp.window_influence*penalty
+            """
+            plt.imshow(np.squeeze(score_), cmap = 'gray')
+            plt.show()
+            plt.pause(5)
+            """
             pos_x, pos_y = _update_target_position(pos_x, pos_y, score_, final_score_sz, design.tot_stride, design.search_sz, hp.response_up, x_sz)
             # convert <cx,cy,w,h> to <x,y,w,h> and save output
             bboxes[i,:] = pos_x-target_w/2, pos_y-target_h/2, target_w, target_h
             # update the target representation with a rolling average
+           
             if hp.z_lr>0:
                 new_templates_z_ = sess.run([templates_z], feed_dict={
-                                                                siam.pos_x_ph: pos_x,
-                                                                siam.pos_y_ph: pos_y,
-                                                                siam.z_sz_ph: z_sz,
+                                                                siamNet.batched_pos_x_ph: [pos_x],
+                                                                siamNet.batched_pos_y_ph: [pos_y],
+                                                                siamNet.batched_z_sz_ph: [z_sz],
                                                                 image: image_
                                                                 })
 
@@ -117,8 +145,8 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, 
             z_sz = (1-hp.scale_lr)*z_sz + hp.scale_lr*scaled_exemplar[new_scale_id]
             
             if run.visualization:
-                show_frame(image_, bboxes[i,:], 1)        
-
+                show_frame((image_[0] + 0.5) * 255 , bboxes[i,:], 1)        
+        
         t_elapsed = time.time() - t_start
         speed = num_frames/t_elapsed
 
@@ -132,20 +160,31 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, 
         # trace_file.write(trace.generate_chrome_trace_format())
 
     plt.close('all')
-
+    
     return bboxes, speed
-
 
 def _update_target_position(pos_x, pos_y, score, final_score_sz, tot_stride, search_sz, response_up, x_sz):
     # find location of score maximizer
     p = np.asarray(np.unravel_index(np.argmax(score), np.shape(score)))
+    #print(p)
+    
+    tmp1 = score[p]
+    score[p] = -float('inf')
+    p_2 = np.asarray(np.unravel_index(np.argmax(score), np.shape(score)))
+    tmp2 = score[p_2]
+    score[p_2] = -float('inf')
+    p_3 = np.asarray(np.unravel_index(np.argmax(score), np.shape(score)))
+    #score[p] = tmp1
+    #score[p_2] = tmp2
+    p = (p + p_2 + p_3 ) / 3
+    
     # displacement from the center in search area final representation ...
     center = float(final_score_sz - 1) / 2
     disp_in_area = p - center
     # displacement from the center in instance crop
     disp_in_xcrop = disp_in_area * float(tot_stride) / response_up
     # displacement from the center in instance crop (in frame coordinates)
-    disp_in_frame = disp_in_xcrop *  x_sz / search_sz
+    disp_in_frame = disp_in_xcrop  *  x_sz / search_sz
     # *position* within frame in frame coordinates
     pos_y, pos_x = pos_y + disp_in_frame[0], pos_x + disp_in_frame[1]
     return pos_x, pos_y

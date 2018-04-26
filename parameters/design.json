@@ -8,5 +8,15 @@
 	"score_sz": 33,
 	"tot_stride": 4,
 	"context": 0.5,
-	"pad_with_image_mean": true
+	"pad_with_image_mean": true,
+	"resize_width": 700,
+	"resize_height": 700,
+	"channel":3,
+	"filter_w": [11, 5, 3, 3, 3],
+	"filter_h":[11, 5, 3, 3, 3],
+	"filter_num": [96, 256, 384, 384, 128],
+	"batch_size":8,
+	"num_epochs": 50,
+	"saver_folder": "output",
+	"path_ckpt": "saverall_vedio_unormalized-29000"
 }

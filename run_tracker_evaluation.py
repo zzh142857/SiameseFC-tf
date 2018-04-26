@@ -28,7 +28,7 @@ import cv2
 
 
 
-def main(step = 15000):
+def main():
 	# avoid printing TF debugging information
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 	# TODO: allow parameters from command line or leave everything in json files?
@@ -40,65 +40,25 @@ def main(step = 15000):
 	# [1 4 7] => [1 1 2 3 4 5 6 7 7]  (length 3*3)
 	final_score_sz = hp.response_up * (design.score_sz - 1) + 1
 	# build TF graph once for all
+	gt, frame_name_list, _, _ = _init_video(env, evaluation, evaluation.video)
+	
+	frame_sz = [i for i in cv2.imread(frame_name_list[0]).shape]
+	
 	siamNet = siam.Siamese(batch_size = 1);
-	image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary, templates_x, max_pos_x, max_pos_y = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz = [480, 864, 3])
+	image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary, templates_x, max_pos_x, max_pos_y = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz)
 
-	# iterate through all videos of evaluation.dataset
-	if evaluation.video == 'all':
-		dataset_folder = os.path.join(env.root_dataset, evaluation.dataset)
-		videos_list = [v for v in os.listdir(dataset_folder)]
-		videos_list.sort()
-		nv = np.size(videos_list)
-		speed = np.zeros(nv * evaluation.n_subseq) #evaluation.n_subseq = 3
-		precisions = np.zeros(nv * evaluation.n_subseq)
-		precisions_auc = np.zeros(nv * evaluation.n_subseq)
-		ious = np.zeros(nv * evaluation.n_subseq)
-		lengths = np.zeros(nv * evaluation.n_subseq)
-		for i in range(nv):
-			gt, frame_name_list, frame_sz, n_frames = _init_video(env, evaluation, videos_list[i])
-			starts = np.rint(np.linspace(0, n_frames - 1, evaluation.n_subseq + 1)) #evenly divide n_frames into n_subseq pieces
-			starts = starts[0:evaluation.n_subseq]
-			for j in range(evaluation.n_subseq):
-			    start_frame = int(starts[j])
-			    gt_ = gt[start_frame:, :]
-			    frame_name_list_ = frame_name_list[start_frame:]
-			    pos_x, pos_y, target_w, target_h = region_to_bbox(gt_[0]) # coordinate of gt is the bottom left point of the bbox
-			    idx = i * evaluation.n_subseq + j
-			    bboxes, speed[idx] = tracker_v2(hp, run, design, frame_name_list_, pos_x, pos_y,
-			                                                         target_w, target_h, final_score_sz, 
-			                                                         image, templates_z, scores, start_frame, path_ckpt = design.path_ckpt + "-" + str(step), siamNet = siamNet)
-			    lengths[idx], precisions[idx], precisions_auc[idx], ious[idx] = _compile_results(gt_, bboxes, evaluation.dist_threshold)
-			    print(str(i) + ' -- ' + videos_list[i] + \
-			    ' -- Precision: ' + "%.2f" % precisions[idx] + \
-			    ' -- Precisions AUC: ' + "%.2f" % precisions_auc[idx] + \
-			    ' -- IOU: ' + "%.2f" % ious[idx] + \
-			    ' -- Speed: ' + "%.2f" % speed[idx] + ' --')
-			    
 
-		tot_frames = np.sum(lengths)
-		mean_precision = np.sum(precisions * lengths) / tot_frames
-		mean_precision_auc = np.sum(precisions_auc * lengths) / tot_frames
-		mean_iou = np.sum(ious * lengths) / tot_frames
-		mean_speed = np.sum(speed * lengths) / tot_frames
-		print('-- Overall stats (averaged per frame) on ' + str(nv) + ' videos (' + str(tot_frames) + ' frames) --')
-		print(' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % mean_precision +\
-			  ' -- Precisions AUC: ' + "%.2f" % mean_precision_auc +\
-			  ' -- IOU: ' + "%.2f" % mean_iou +\
-			  ' -- Speed: ' + "%.2f" % mean_speed + ' --')
 	
+	pos_x, pos_y, target_w, target_h = region_to_bbox(gt[evaluation.start_frame])
+	bboxes, speed = tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
+		                    image, templates_z, scores, evaluation.start_frame,  path_ckpt = os.path.join(design.saver_folder, design.path_ckpt), siamNet = siamNet)
+	_, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
+	print(evaluation.video + \
+		  ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % precision +\
+		  ' -- Precision AUC: ' + "%.2f" % precision_auc + \
+		  ' -- IOU: ' + "%.2f" % iou + \
+		  ' -- Speed: ' + "%.2f" % speed + ' --')
 
-	else:
-		gt, frame_name_list, _, _ = _init_video(env, evaluation, evaluation.video)
-		pos_x, pos_y, target_w, target_h = region_to_bbox(gt[evaluation.start_frame])
-		bboxes, speed = tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
-			                    image, templates_z, scores, evaluation.start_frame,  path_ckpt = design.path_ckpt + "-" + str(step), siamNet = siamNet)
-		_, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
-		print(evaluation.video + \
-			  ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % precision +\
-			  ' -- Precision AUC: ' + "%.2f" % precision_auc + \
-			  ' -- IOU: ' + "%.2f" % iou + \
-			  ' -- Speed: ' + "%.2f" % speed + ' --')
-	
 
 
 def _compile_results(gt, bboxes, dist_threshold):

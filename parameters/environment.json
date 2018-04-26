@@ -1,5 +1,7 @@
 {
-	"root_dataset": "data",
+	"root_dataset": ".",
 	"root_pretrained": "pretrained",
-	"root_parameters": "parameters"
+	"root_parameters": "parameters",
+	"tfrecord_path": "tfrecords",
+	"tfrecord_filename": "train_shuffled"
 }
