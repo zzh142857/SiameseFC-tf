@@ -86,7 +86,7 @@ To reduce the time for reading images during training, we write all the training
 Execute `python3 get_shuffled_list_from_vedio.py` to generate a shuffled list of information of all examplar search imge pairs for training.   
 Then`python3 prepare_training_dataset.py` to write the real data into a tfrecord file.
 ## Training model
-1) Set parameters:   
+1) Set parameters:
 Parameters for training process are defined in `parameters.design.json`, `parameters.environment.json` and `parameters.hyperparams.json`. 
 Make sure the path for tfrecord, checkpoint saver are correct, and one can also customize the model parameters at will.   
 2) Execute training scripts 
