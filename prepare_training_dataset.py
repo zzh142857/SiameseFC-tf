@@ -2,12 +2,11 @@
 __author__ = "Zhenghao Zhao"
 
 import tensorflow as tf
-import numpy as np
 import cv2
 import os
 import os.path
 from src.region_to_bbox import region_to_bbox_normalized
-
+from src.parse_arguments import parse_arguments
 
 
 def transform2tfrecord(data_file, tfrecord_name, output_directory, resize_width, resize_height):
@@ -26,8 +25,9 @@ def transform2tfrecord(data_file, tfrecord_name, output_directory, resize_width,
     writer = tf.python_io.TFRecordWriter(filename)
         
     cur_dir = os.getcwd()
-    data_folder = os.path.join(cur_dir, data_file)
+    data_folder = os.path.join("tfrecords", data_file)
     with open(data_folder, "r") as f:
+        print("Generating tfrecord from " + data_folder)
         data_list = f.readlines()
         for data in data_list:
             z, x, z_pos_x, z_pos_y, z_target_w, z_target_h, x_pos_x, x_pos_y, x_target_w, x_target_h = data.strip("\n ").split(" ")
@@ -40,9 +40,9 @@ def transform2tfrecord(data_file, tfrecord_name, output_directory, resize_width,
             x_target_w = float(x_target_w)
             x_target_h = float(x_target_h)
             z_img = cv2.imread(z)
-            #z_img = cv2.resize(z_img, (resize_width,resize_height))
+            z_img = cv2.resize(z_img, (resize_width,resize_height))
             x_img = cv2.imread(x)
-            #x_img = cv2.resize(x_img, (resize_width,resize_height))
+            x_img = cv2.resize(x_img, (resize_width,resize_height))
             z_raw = z_img.tostring()
             x_raw = x_img.tostring()
             
@@ -66,13 +66,15 @@ def transform2tfrecord(data_file, tfrecord_name, output_directory, resize_width,
  
         
     writer.close()
+    print("Writer closed.")
     print(tfrecord_name + '.tfrecords'+" is written to "+output_directory)
 
 
 
     
 if __name__ == "__main__":
-    transform2tfrecord("output/train_5_vedio.txt", "train_5_vedio", "output", resize_width = 700, resize_height = 700)
+    hp, evaluation, run, env, design = parse_arguments()
+    transform2tfrecord("shuffled_data_list.txt", "training_dataset", "tfrecords", resize_width = design.resize_width, resize_height = design.resize_height)
 
 
 

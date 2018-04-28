@@ -4,13 +4,14 @@ import os
 import numpy as np
 from PIL import Image
 import src.siamese as siam
-from src.tracker import tracker_v2
+from src.tracker import tracker
 from src.parse_arguments import parse_arguments
 from src.region_to_bbox import region_to_bbox
 import tensorflow as tf
 from PIL import Image
 import time
 import cv2
+
 """
 	tracking procedure:
 	1,input a image sequence of a vedio
@@ -25,10 +26,11 @@ import cv2
 	10,goto step 3
 
 """
+def evaluate_all_vedio():
 
 
 
-def main():
+def evaluate():
 	# avoid printing TF debugging information
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 	# TODO: allow parameters from command line or leave everything in json files?
@@ -50,14 +52,16 @@ def main():
 
 	
 	pos_x, pos_y, target_w, target_h = region_to_bbox(gt[evaluation.start_frame])
-	bboxes, speed = tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
+	bboxes, speed = tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
 		                    image, templates_z, scores, evaluation.start_frame,  path_ckpt = os.path.join(design.saver_folder, design.path_ckpt), siamNet = siamNet)
 	_, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
+	
 	print(evaluation.video + \
 		  ' -- Precision ' + "(%d px)" % evaluation.dist_threshold + ': ' + "%.2f" % precision +\
 		  ' -- Precision AUC: ' + "%.2f" % precision_auc + \
 		  ' -- IOU: ' + "%.2f" % iou + \
 		  ' -- Speed: ' + "%.2f" % speed + ' --')
+    return precision, precision_auc, iou, speed
 
 
 
@@ -151,5 +155,5 @@ def _compute_iou(boxA, boxB):
 
 
 if __name__ == '__main__':
-	sys.exit(main())
+	sys.exit(evaluate())
 

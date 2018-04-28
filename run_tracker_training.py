@@ -17,7 +17,6 @@ from src.read_training_dataset import read_tfrecord
     5,bp, update variable
 """
 
-tfrecord_filename = ""
 
 def main():
     # avoid printing TF debugging information
@@ -33,9 +32,8 @@ def main():
     # build TF graph once for all
     #filename, image, templates_z, scores = siam.build_tracking_graph(final_score_sz, design, env)
 
-    frame_sz = [design.resize_width, design.resize_height, design.channel]
     siamNet = siam.Siamese(design.batch_size)
-    image, z_crops, x_crops, templates_z, scores, loss, train_step, distance_to_gt, summary, tz , max_pos_x, max_pos_y= siamNet.build_tracking_graph_train(final_score_sz, design, env, hp, frame_sz)
+    image, z_crops, x_crops, templates_z, scores, loss, train_step, distance_to_gt, summary, tz , max_pos_x, max_pos_y= siamNet.build_tracking_graph_train(final_score_sz, design, env, hp)
  
     batched_data = read_tfrecord(os.path.join(env.tfrecord_path, env.tfrecord_filename), num_epochs = design.num_epochs, batch_size = design.batch_size)
     
