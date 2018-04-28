@@ -10,7 +10,7 @@ The code is revised on the base of the evaluation-only version code from the rep
 * [**Jack Valmadre**](http://jack.valmadre.net)
 
 
-## 2 Training Step
+## Training Step
 Step by step explanation of the whole model and training process.
 ### 2.1 Prepare training data
 One training sample consists of an examplar image: **z**, a search image : **x**, and their correspnding ground truth information: **z_pos_x, z_pos_y, z_target_w, z_target_h and x_pos_x, x_pos_y, x_target_w, x_target_h**. Note the coordinates of the target have been converted to the center of bbox from the lefttop corner through function *src.region_to_bbox.py*. <br>
@@ -45,6 +45,29 @@ The score map is resized to the same size of the cropped **x** image by bilinear
 The logistic loss of the predicted score map is defined as: $\frac{1}{D}\sum_{u \in D}\log{(1 + e^{-y(u)v(u)})}$, where *D* represent all the pixels on the score map. And the value of the ground thruth label *v(u)* is *+1* if it is within the ground thruth bbox, and *-1* if not.<br>
 <br>
 We adopt the adamoptimizer with an initial learning rate of *1e-6* to minimize the loss.
+
+## 3 Tracking Algorithm
+Given the first frame and its bbox, predict the bbox for the following frames. 
+### 3.1 Inference
+Input the first frame into model as **z**, and input the second frame as **x**, *batch_size* is one in tracking process.<br>
+<br>
+Here we crop three different scale smaples for **x** with the factor of $1.04^{-2}, 1, 1.04^{2}$. 
+### 3.2 Finalize the score map
+The output of the inference model is a [*1, design.search_sz, design.search_sz, 3*] score map, in which *1* correspond to unit *batch_size* and *3* correspond to the three different scaled **x** samples.
+#### 3.2.1 Penalize change of scale
+We first squeeze the unit dimension in score map, and split into three [*design.search_sz, design.search_sz*] score maps represent the prediction at three scales. We then apply a penalty for the change of scale, the first and third score map are multiplied with factor *hp.scale_penalty*, which is *0.97* from the original paper.
+#### 3.2.2 Update scale
+Select the scale from three score maps who has the largest maximum score, and update the target scale with a learning rate of *hp.scale_lr = 0.59*: $x\_sz = (1-hp.scale\_lr) * x\_sz + hp.scale\_lr * scale\_factor$, where the scale factor can be $1.04^{-2}, 1, 1.04^{2}$. <br>
+<br>
+This will update the cropping area of **x**, but the size of the final cropped image still remains the same, just the image will be stretched more.
+#### 3.2.3 Normalize score map
+The selected score is then  substracted by the smallest score on the map, and divided by the sum of all scores.
+#### 3.2.4 Penalize displacement
+A cosine shape window is added to the normalized score map to penalize the displacement of the target: $score map = (1-hp.window\_influence)*score map + hp.window\_influence*penalty$.
+### 3.3 Get predicted position
+Get the index of the highest score on the map, and recover the displacement on the original **x** image by dividing the resize facter when we crop the image: $displacement *= x\_sz / design.search\_sz$. And we can get the width and height of the target bbox with the updated scale.
+### 3.4 Next iteration
+**x** of the current prediction will be used as **z** for the prediction of next frame. So we use the predicted position and scale(???) to crop the original **x** image as the new **z**. This new cropped **z** is then send to conv net and generate a new **z** feature map. We then update it with a rolling average: $z\_feature\_map = (1-hp.z\_lr)*old\_z\_feature\_map + hp.z\_lr*new\_z\_feature\_map$.
 
 # User Guide for the code
 ## Preparation
