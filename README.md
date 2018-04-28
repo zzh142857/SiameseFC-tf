@@ -80,11 +80,17 @@ Get the index of the highest score on the map, and recover the displacement on t
 cd to the directory where this README.md file located, then:
 `mkdir data`   
 Download [video sequences](https://drive.google.com/file/d/0B7Awq_aAemXQSnhBVW5LNmNvUU0/view) in `data` and unzip the archive.
-
+The original model on the paper is trained with the ImageNet(ILSVRC15) dataset, which has millions of labeled images. For simplicity, we only use OTB15 for training and VOT for validation. The training data contains 78 vedios, which total thirty thousand images.
+5)Prepare tfrecord file for training data   
+To reduce the time for reading images during training, we write all the training data into a single tfrecord file.   
+Execute `python3 get_shuffled_list_from_vedio.py` to generate a shuffled list of information of all examplar search imge pairs for training.   
+Then`python3 prepare_training_dataset.py` to write the real data into a tfrecord file.
 ## Training model
-1)Generate tfrecord file from training vedio    
+1)Set parameters:   
+Parameters for training process are defined in `parameters.design.json`, `parameters.environment.json` and `parameters.hyperparams.json`. 
+Make sure the path for tfrecord, checkpoint saver are correct, and one can also customize the model parameters at will.   
 2)Execute training scripts 
-`python run_tracker_training.py`
+`python run_tracker_training.py`   
 
 ## Running the tracker
 1) Set `video` from `parameters.evaluation` to `"all"` or to a specific sequence (e.g. `"vot2016_ball1"`)
