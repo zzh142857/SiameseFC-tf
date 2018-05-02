@@ -59,7 +59,7 @@ def read_tfrecord(filename, num_epochs, batch_size, width = 700, height = 700):
     resize_width = width
     resize_height = height
     
-    filename_queue = tf.train.string_input_producer([filename  + ".tfrecords" ] )
+    filename_queue = tf.train.string_input_producer([filename  + ".tfrecords" ], num_epochs = num_epochs)
     reader = tf.TFRecordReader()
 
     _, serialized_example = reader.read(filename_queue)

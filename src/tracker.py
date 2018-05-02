@@ -87,7 +87,7 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h,
                                                                         siamNet.batched_pos_x_ph: [pos_x],
                                                                         siamNet.batched_pos_y_ph: [pos_y],
                                                                         siamNet.batched_z_sz_ph: [z_sz],
-                                                                        image: [z_image / 255.  - 0.5]})
+                                                                        image: [z_image / 255. * 2  - 1]})
         new_templates_z_ = templates_z_
 
         t_start = time.time()
@@ -111,7 +111,7 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h,
                     siamNet.batched_x_sz1_ph: [scaled_search_area[1]],
                     siamNet.batched_x_sz2_ph: [scaled_search_area[2]],
                     templates_z: np.squeeze(templates_z_),
-                    image: [x_image / 255. - 0.5],
+                    image: [x_image / 255. * 2 - 1],
                 }, **run_opts)
             
             # visualize the output score map
@@ -165,7 +165,7 @@ def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h,
             z_sz = (1-hp.scale_lr)*z_sz + hp.scale_lr*scaled_exemplar[new_scale_id]
             
             if run.visualization:
-                show_frame((image_[0] + 0.5) * 255 , bboxes[i,:], 1)        
+                show_frame(x_image , bboxes[i,:], 1)        
         
         t_elapsed = time.time() - t_start
         speed = num_frames/t_elapsed
