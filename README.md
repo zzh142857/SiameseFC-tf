@@ -2,8 +2,6 @@
 This repository is the tensorflow implementation of both training and evaluation of SiamFC described in the paper [*Fully-Convolutional Siamese nets for object tracking*](https://www.robots.ox.ac.uk/~luca/siamese-fc.html).   
 The code is revised on the base of the evaluation-only version code from the repository of the auther of this paper(https://github.com/torrvision/siamfc-tf).
 
-## Author of this repository
-**Zhenghao Zhao**
 
 ## Authors of the original paper
 * [**Luca Bertinetto**](https://www.robots.ox.ac.uk/~luca)
