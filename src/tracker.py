@@ -1,9 +1,7 @@
-
 import tensorflow as tf
 print('Using Tensorflow '+tf.__version__)
 import matplotlib.pyplot as plt
 import sys
-# sys.path.append('../')
 import os
 import csv
 import numpy as np
@@ -14,12 +12,35 @@ import src.siamese as siam
 from src.visualization import show_frame, show_crops, show_scores
 
 
-# gpu_device = 2
-# os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu_device)
-
 # read default parameters and override with custom ones
 
-def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,  image, templates_z, scores, start_frame,  path_ckpt, siamNet):
+def tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, 
+    final_score_sz, image, templates_z, scores, path_ckpt, siamNet):
+    """
+        run the tracking steps under tensorflow session.
+        
+        Inputs:
+            hp, run, design: system parameters.
+            
+            frame_name_list: a list of paths for all frames in the tracking vedio.
+            
+            pos_x, pos_y, target_w, target_h: target position and size in the 
+                first frame from ground thruth, will be updated during tracking.
+            
+            final_score_sz: size of the final score map after bilinear interpolation.
+            
+            image, templates_z, scores: tensors that will be run in tensorflow session.
+                See siamese.py for detailed explanation.
+                
+            path_ckpt: path of the checkpoint file used to retore model variables.
+            
+            siamNet: an instance of siamese network class.
+            
+        Returns:
+            bboxes: a list of the predicted bboxes
+            
+            speed: average tracking speed(fps)
+    """
     num_frames = np.size(frame_name_list)
     # stores tracker's output for evaluation
     bboxes = np.zeros((num_frames,4))
@@ -51,7 +72,8 @@ def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_
     # with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     with tf.Session() as sess:
         saver.restore(sess, path_ckpt)
-        print("Model restored......")
+        print("Model restored from: ", path_ckpt)
+        print("Start tracking......")
         # Coordinate the loading of image files.
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
@@ -59,17 +81,8 @@ def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_
         # save first frame position (from ground-truth)
         bboxes[0,:] = pos_x-target_w/2, pos_y-target_h/2, target_w, target_h  
 
-
-        z_image = cv2.imread(frame_name_list[0])
-        """
-        cv2.namedWindow('image', cv2.WINDOW_NORMAL)               
-        cv2.rectangle(z_image, (int(pos_x-target_w/2), int(pos_y-target_h/2)), (int( pos_x+target_w/2), int(pos_y+target_h/2)), (255,0,0), 2)
-        cv2.imshow('image',z_image)
-                
-        cv2.waitKey(0)
-        """
-        #z_image = cv2.resize(z_image, (resize_width,resize_height))
-        
+        # Read the first frame as z, and input into conv net to get its feature map
+        z_image = cv2.imread(frame_name_list[0])      
         image_, templates_z_ = sess.run([image, templates_z], feed_dict={
                                                                         siamNet.batched_pos_x_ph: [pos_x],
                                                                         siamNet.batched_pos_y_ph: [pos_y],
@@ -85,10 +98,10 @@ def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_
             scaled_search_area = x_sz * scale_factors
             scaled_target_w = target_w * scale_factors
             scaled_target_h = target_h * scale_factors
+            
+            # Read the next frame as x, input x into conv net, with the featre 
+            # map of z to get the final score map
             x_image = cv2.imread(frame_name_list[i])
-
-            #x_image = cv2.resize(x_image, (resize_width,resize_height))
-
             image_, scores_ = sess.run(
                 [image, scores],
                 feed_dict={
@@ -100,11 +113,15 @@ def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_
                     templates_z: np.squeeze(templates_z_),
                     image: [x_image / 255. - 0.5],
                 }, **run_opts)
+            
+            # visualize the output score map
             """
             plt.imshow(np.squeeze(scores_[0]), cmap = 'gray')
             plt.show()
             plt.pause(5)
             """
+            
+            #finalize the score map
             scores_ = np.squeeze(scores_)
             # penalize change of scale
             scores_[0,:,:] = hp.scale_penalty*scores_[0,:,:]
@@ -121,11 +138,14 @@ def tracker_v2(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_
             score_ = score_/np.sum(score_)
             # apply displacement penalty
             score_ = (1-hp.window_influence)*score_ + hp.window_influence*penalty
+            
+            # visualize the finalized score map
             """
             plt.imshow(np.squeeze(score_), cmap = 'gray')
             plt.show()
             plt.pause(5)
             """
+            
             pos_x, pos_y = _update_target_position(pos_x, pos_y, score_, final_score_sz, design.tot_stride, design.search_sz, hp.response_up, x_sz)
             # convert <cx,cy,w,h> to <x,y,w,h> and save output
             bboxes[i,:] = pos_x-target_w/2, pos_y-target_h/2, target_w, target_h

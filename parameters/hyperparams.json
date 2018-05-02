@@ -1,6 +1,6 @@
 {
 	"response_up": 8,
-	"window_influence": 0.1,
+	"window_influence": 0.2,
 	"z_lr": 0.01,
 	"scale_num": 3,
 	"scale_step": 1.04,

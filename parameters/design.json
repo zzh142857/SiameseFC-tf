@@ -14,9 +14,9 @@
 	"channel":3,
 	"filter_w": [11, 5, 3, 3, 3],
 	"filter_h":[11, 5, 3, 3, 3],
-	"filter_num": [96, 256, 384, 384, 128],
+	"filter_num": [96, 128, 96, 96, 32],
 	"batch_size":8,
 	"num_epochs": 50,
 	"saver_folder": "output",
-	"path_ckpt": "saverall_vedio_unormalized-29000"
+	"path_ckpt": "saver"
 }
