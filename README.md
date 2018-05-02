@@ -3,11 +3,6 @@ This repository is the tensorflow implementation of both training and evaluation
 The code is revised on the base of the evaluation-only version code from the repository of the auther of this paper(https://github.com/torrvision/siamfc-tf).
 
 
-## Authors of the original paper
-* [**Luca Bertinetto**](https://www.robots.ox.ac.uk/~luca)
-* [**Jack Valmadre**](http://jack.valmadre.net)
-
-
 ## Training Step
 Step by step explanation of the whole model and training process.
 ### 2.1 Prepare training data
