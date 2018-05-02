@@ -29,16 +29,17 @@ def main():
     # instead of
     # [1 4 7] => [1 1 2 3 4 5 6 7 7]  (length 3*3)
     final_score_sz = hp.response_up * (design.score_sz - 1) + 1
-    # build TF graph once for all
-    #filename, image, templates_z, scores = siam.build_tracking_graph(final_score_sz, design, env)
-
+    
+    # build the computational graph of Siamese fully-convolutional network
     siamNet = siam.Siamese(design.batch_size)
+    # get tensors that will be used during training
     image, z_crops, x_crops, templates_z, scores, loss, train_step, distance_to_gt, summary= siamNet.build_tracking_graph_train(final_score_sz, design, env, hp)
  
+    # read tfrecodfile holding all the training data
     batched_data = read_tfrecord(os.path.join(env.tfrecord_path, env.tfrecord_filename), num_epochs = design.num_epochs, batch_size = design.batch_size)
     
-
-    trainer(hp, run, design, final_score_sz, image, templates_z, scores, loss, train_step, distance_to_gt, batched_data, z_crops, x_crops, siamNet, summary)
+    # run trainer
+    trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, scores, loss, train_step, distance_to_gt,  z_crops, x_crops, siamNet, summary)
 
 
 

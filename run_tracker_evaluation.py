@@ -37,8 +37,9 @@ def evaluate():
     # [1 4 7] => [1 1 2 3 4 5 6 7 7]  (length 3*3)
     final_score_sz = hp.response_up * (design.score_sz - 1) + 1
 
-    # build TF graph once for all
+    # build the computational graph of Siamese fully-convolutional network
     siamNet = siam.Siamese(batch_size = 1);
+    # get tensors that will be used during tracking
     image, z_crops, x_crops, templates_z, scores, loss, _, distance_to_gt, summary = siamNet.build_tracking_graph_train(final_score_sz, design, env, hp)
     # iterate through all videos of evaluation.dataset
     if evaluation.video == 'all':
@@ -54,12 +55,12 @@ def evaluate():
         for i in range(nv):
             gt, frame_name_list, frame_sz, n_frames = _init_video(env, evaluation, videos_list[i])
             
-            gt_ = gt[evaluation.start_frame:, :]
-            frame_name_list_ = frame_name_list[evaluation.start_frame:]
+            gt_ = gt[0:, :]
+            frame_name_list_ = frame_name_list[0:]
             pos_x, pos_y, target_w, target_h = region_to_bbox(gt_[0]) # coordinate of gt is the bottom left point of the bbox
             idx = i
             bboxes, speed[idx] = tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
-                            image, templates_z, scores, evaluation.start_frame,  path_ckpt = os.path.join(design.saver_folder, design.path_ckpt), siamNet = siamNet)
+                            image, templates_z, scores, path_ckpt = os.path.join(design.saver_folder, design.path_ckpt), siamNet = siamNet)
             lengths[idx], precisions[idx], precisions_auc[idx], ious[idx] = _compile_results(gt_, bboxes, evaluation.dist_threshold)
             print(str(i) + ' -- ' + videos_list[i] + \
             ' -- Precision: ' + "%.2f" % precisions[idx] + \
@@ -78,13 +79,12 @@ def evaluate():
               ' -- Precisions AUC: ' + "%.2f" % mean_precision_auc +\
               ' -- IOU: ' + "%.2f" % mean_iou +\
               ' -- Speed: ' + "%.2f" % mean_speed + ' --')
-
+    #evaluate only one vedio
     else:
-        gt, frame_name_list, frame_sz, n_frames = _init_video(env, evaluation, evaluation.video)
-	
-        pos_x, pos_y, target_w, target_h = region_to_bbox(gt[evaluation.start_frame])
+        gt, frame_name_list, frame_sz, n_frames = _init_video(env, evaluation, evaluation.video)	
+        pos_x, pos_y, target_w, target_h = region_to_bbox(gt[0])
         bboxes, speed = tracker(hp, run, design, frame_name_list, pos_x, pos_y, target_w, target_h, final_score_sz,
-	                            image, templates_z, scores, evaluation.start_frame,  path_ckpt = os.path.join(design.saver_folder, design.path_ckpt), siamNet = siamNet)
+	                            image, templates_z, scores, path_ckpt = os.path.join(design.saver_folder, design.path_ckpt), siamNet = siamNet)
         _, precision, precision_auc, iou = _compile_results(gt, bboxes, evaluation.dist_threshold)
 
         print(evaluation.video + \
