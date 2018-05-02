@@ -3,5 +3,5 @@
 	"root_pretrained": "pretrained",
 	"root_parameters": "parameters",
 	"tfrecord_path": "tfrecords",
-	"tfrecord_filename": "train_shuffled"
+	"tfrecord_filename": "training_dataset"
 }
