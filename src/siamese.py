@@ -50,6 +50,7 @@ class Siamese(object):
 		image_h = tf.foldl((lambda prev, cur: prev + 1), image[0][0], initializer = 0)
 		image_c = tf.foldl((lambda prev, cur: prev + 1), image[0][0][0], initializer = 0)
 		frame_sz = [image_w, image_h, image_c]
+		
 		# used to pad the crops
 		if design.pad_with_image_mean:
 			avg_chan = tf.reduce_mean(image, axis=(1, 2), name='avg_chan') 
@@ -76,14 +77,17 @@ class Siamese(object):
 			
 			# pad crop x
 			single_x = image[batch]
+			
 			frame_padded_x, npad_x = pad_frame(single_x, frame_sz, single_pos_x_ph, single_pos_y_ph, single_x_sz2_ph, avg_chan[batch])
 			frame_padded_x = tf.cast(frame_padded_x, tf.float32)
+			
 			# extract tensor of x_crops (3 scales)
 			single_crops_x.append(tf.squeeze(extract_crops_x(frame_padded_x, npad_x, single_pos_x_ph, single_pos_y_ph, single_x_sz0_ph, single_x_sz1_ph, single_x_sz2_ph, design.search_sz)))
-		
+
 		# stack the cropped single images
 		z_crops = tf.stack(single_crops_z)
 		x_crops = tf.stack(single_crops_x)
+		
 		x_crops_shape = x_crops.get_shape().as_list()
 		x_crops = tf.reshape(x_crops, [x_crops_shape[0] * x_crops_shape[1]] + x_crops_shape[2: ])		
 		print("shape of single_crops_x: ", single_crops_x[0].shape, "shape of x_crops: ", x_crops.shape)

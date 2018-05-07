@@ -5,7 +5,7 @@ import src.siamese as siam
 from src.trainer import trainer
 from src.parse_arguments import parse_arguments
 from src.region_to_bbox import region_to_bbox
-from src.read_training_dataset import read_tfrecord
+import src.read_training_dataset 
 
 
 """
@@ -36,7 +36,8 @@ def main():
     image, z_crops, x_crops, templates_z, scores, loss, train_step, distance_to_gt, summary= siamNet.build_tracking_graph_train(final_score_sz, design, env, hp)
  
     # read tfrecodfile holding all the training data
-    batched_data = read_tfrecord(os.path.join(env.tfrecord_path, env.tfrecord_filename), num_epochs = design.num_epochs, batch_size = design.batch_size)
+    data_reader = src.read_training_dataset.myReader(design.resize_width, design.resize_height, design.channel)
+    batched_data = data_reader.read_tfrecord(os.path.join(env.tfrecord_path, env.tfrecord_filename), num_epochs = design.num_epochs, batch_size = design.batch_size)
     
     # run trainer
     trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, scores, loss, train_step, distance_to_gt,  z_crops, x_crops, siamNet, summary)

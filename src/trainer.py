@@ -55,7 +55,7 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
     config = tf.ConfigProto()    
     config.gpu_options.allow_growth = True    
     with tf.Session(config = config) as sess:
-        #saver.restore(sess, "output/saver5_vedio_unormalized_half_labelsize-4000")
+        #saver.restore(sess, "output/saver-1000")
         print("Session started......")
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())

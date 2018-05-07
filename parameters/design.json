@@ -18,5 +18,5 @@
 	"batch_size":8,
 	"num_epochs": 50,
 	"saver_folder": "output",
-	"path_ckpt": "saver"
+	"path_ckpt": "saver-5000"
 }

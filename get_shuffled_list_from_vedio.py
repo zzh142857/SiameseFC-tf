@@ -9,7 +9,7 @@ from src.region_to_bbox import region_to_bbox_normalized
 from random import shuffle
 
 
-def prepare_shuffled_list(data_folder, output_filename, output_directory):
+def prepare_shuffled_list(data_folder, output_filename, output_directory, num_vedio):
     """
         Input:
             data_folder: relative path of folder who contains all the vedio folders for training.
@@ -24,7 +24,7 @@ def prepare_shuffled_list(data_folder, output_filename, output_directory):
     
         
     cur_dir = os.getcwd()
-    data_folder = os.path.join(cur_dir, data_folder)
+    data_folder = os.path.join(cur_dir, data_folder, num_vedio)
     #get a list of dirs in data_folder, in each of which contains a training vedio
     vedio_folder_list = sorted([dir for dir in os.listdir(data_folder) if not os.path.isfile(os.path.join(data_folder, dir))])[:num_vedio]
     vedio_index = 0
