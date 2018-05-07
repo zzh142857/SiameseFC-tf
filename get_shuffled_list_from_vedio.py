@@ -24,7 +24,7 @@ def prepare_shuffled_list(data_folder, output_filename, output_directory, num_ve
     
         
     cur_dir = os.getcwd()
-    data_folder = os.path.join(cur_dir, data_folder, num_vedio)
+    data_folder = os.path.join(cur_dir, data_folder)
     #get a list of dirs in data_folder, in each of which contains a training vedio
     vedio_folder_list = sorted([dir for dir in os.listdir(data_folder) if not os.path.isfile(os.path.join(data_folder, dir))])[:num_vedio]
     vedio_index = 0
