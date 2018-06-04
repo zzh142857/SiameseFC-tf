@@ -72,9 +72,11 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                 z_, x_, z_pos_x_, z_pos_y_, z_target_w_, z_target_h_, x_pos_x_, x_pos_y_, x_target_w_, x_target_h_= sess.run([z, x, z_pos_x, z_pos_y, z_target_w, z_target_h, x_pos_x, x_pos_y, x_target_w, x_target_h])
                 
                 # calculate crop size for z, x
-                context = design.context*(z_target_w_+z_target_h_)
-                z_sz = tf.cast(tf.sqrt(tf.constant(z_target_w_+context)*tf.constant(z_target_h_+context)), tf.float64)#(w +2p)*(h+2p)
-                x_sz = float(design.search_sz) / design.exemplar_sz * z_sz
+                context_z = design.context*(z_target_w_+z_target_h_)
+                z_sz = tf.cast(tf.sqrt(tf.constant(z_target_w_+context_z)*tf.constant(z_target_h_+context_z)), tf.float64)#(w +2p)*(h+2p)
+                context_x = design.context*(x_target_w_+x_target_h_)
+                x_sz = tf.cast(tf.sqrt(tf.constant(x_target_w_+context_x)*tf.constant(x_target_h_+context_x)), tf.float64)#(w +2p)*(h+2p)
+                x_sz = float(design.search_sz) / design.exemplar_sz * x_sz
                 z_sz_, x_sz_ = sess.run([z_sz, x_sz])
                 
                 # input z into conv net to get its feature map        
