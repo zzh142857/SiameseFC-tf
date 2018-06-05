@@ -3,5 +3,8 @@ pretrained/
 *.ipynb_checkpoints
 *.pyc
 *.swp
-notebooks/*
+notebooks/
 .idea
+output/
+vedio/
+tfrecords/
