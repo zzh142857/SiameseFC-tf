@@ -72,7 +72,7 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                 # calculate crop size for z, x
                 context_z = design.context*(z_target_w_+z_target_h_)
                 z_sz = tf.cast(tf.sqrt(tf.constant(z_target_w_+context_z)*tf.constant(z_target_h_+context_z)), tf.float64)#(w +2p)*(h+2p)
-                
+
                 context_x = design.context*(x_target_w_+x_target_h_)
                 x_sz = tf.cast(tf.sqrt(tf.constant(x_target_w_+context_x)*tf.constant(x_target_h_+context_x)), tf.float64)#(w +2p)*(h+2p)
                 x_sz = float(design.search_sz) / design.exemplar_sz * x_sz
@@ -147,13 +147,13 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                             save_path = saver.save(sess, os.path.join(design.saver_folder, design.path_ckpt) , global_step = step)
                     #main(step)
 
-                except tf.errors.OutOfRangeError:
+            except tf.errors.OutOfRangeError:
                 print("End of training")  # ==> "End of dataset"
                 break
 
-            # Finish off the filename queue coordinator.
-            coord.request_stop()
-            coord.join(threads)             
+        # Finish off the fiqlename queue coordinator.
+        coord.request_stop()
+        coord.join(threads)             
 
 
 def _create_gt_label_final_score_sz(batch_size, final_score_sz, x_target_w_, x_target_h_, x_sz, search_sz):
