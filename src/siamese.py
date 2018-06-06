@@ -1,11 +1,9 @@
 import tensorflow as tf
 import numpy as np
 import scipy.io
-import sys
-import os.path
 from src.convolutional import set_convolutional, set_convolutional_train
 from src.crops import extract_crops_z, extract_crops_x, pad_frame, resize_images
-sys.path.append('../')
+
 
 
 # the follow parameters *have to* reflect the design of the network to be imported
@@ -19,9 +17,7 @@ _bnorm_adjust = True
 assert len(_conv_stride) == len(_filtergroup_yn) == len(_bnorm_yn) == len(_relu_yn) == len(_pool_stride), ('These arrays of flags should have same length')
 assert all(_conv_stride) >= True, ('The number of conv layers is assumed to define the depth of the network')
 _num_layers = len(_conv_stride)
-hann_1d = np.expand_dims(np.hanning(257), axis=0)
-penalty = np.transpose(hann_1d) * hann_1d
-penalty = penalty / np.sum(penalty)
+
 
 class Siamese(object):
 	def __init__(self, batch_size):
@@ -46,10 +42,7 @@ class Siamese(object):
 	    
 		image = tf.placeholder(tf.float32, [self.batch_size] + [None, None, 3], name = "input_image") 
 		# get frame_sz
-		image_w = tf.foldl((lambda prev, cur: prev + 1), image[0], initializer = 0)
-		image_h = tf.foldl((lambda prev, cur: prev + 1), image[0][0], initializer = 0)
-		image_c = tf.foldl((lambda prev, cur: prev + 1), image[0][0][0], initializer = 0)
-		frame_sz = [image_w, image_h, image_c]
+		frame_sz = tf.shape(image)[1:]
 		
 		# used to pad the crops
 		if design.pad_with_image_mean:
@@ -124,8 +117,6 @@ class Siamese(object):
 		return image, z_crops, x_crops, templates_z, scores_up, loss, train_step, distance_to_gt, summary
 
 	def distance(self, score, final_score_sz, hp):
-		score = score  * (1 - hp.window_influence) + hp.window_influence * penalty
-		
 		if (self.batch_size == 1):
 			score = tf.reshape(score, [1] + score.get_shape().as_list())
 		# reshape to flatten the score map

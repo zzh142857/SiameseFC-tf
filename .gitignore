@@ -5,6 +5,5 @@ pretrained/
 *.swp
 notebooks/
 .idea
-output/
 vedio/
 tfrecords/
