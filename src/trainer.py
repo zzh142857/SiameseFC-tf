@@ -1,11 +1,8 @@
-
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 print('Using Tensorflow '+tf.__version__)
 import matplotlib.pyplot as plt
-import sys
-# sys.path.append('../')
 import os
-import csv
 import numpy as np
 from PIL import Image
 import time
@@ -13,12 +10,8 @@ import matplotlib.pyplot as plt
 import src.siamese as siam
 from src.visualization import show_frame, show_crops, show_scores
 import cv2
-#from run_tracker_evaluation_v2 import main
 
-# gpu_device = 2
-# os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu_device)
 
-# read default parameters and override with custom ones
 def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, scores, loss, train_step, distance_to_gt, z_crops, x_crops, siamNet, summary):
     """
         run the training steps under tensorflow session.
@@ -28,16 +21,21 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
             
             final_score_sz: size of the final score map after bilinear interpolation.
             
+            batched_data: list of batched training data, consist of : z, x, z_pos_x, 
+                    z_pos_y, z_target_w, z_target_h, x_pos_x, x_pos_y, x_target_w, x_target_h
+            
             image, templates_z, scores, loss, train_step, distance_to_gt, z_crops, 
             x_crops: tensors that will be run in tensorflow session. See siamese.py 
                      for detailed explanation.
            
             siamNet: an instance of siamese network class.
+
+            summary: summary tensor for tensorboard.
             
         Returns:
        
     """
-    
+
     # run_metadata = tf.RunMetadata()
     # run_opts = {
     #     'options': tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
@@ -81,10 +79,10 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                 
                 # input z into conv net to get its feature map        
                 templates_z_, z_crops_ = sess.run([templates_z, z_crops], feed_dict={
-                                                                                siamNet.batched_pos_x_ph: z_pos_x_,
-                                                                                siamNet.batched_pos_y_ph: z_pos_y_,
-                                                                                siamNet.batched_z_sz_ph: z_sz_,
-                                                                                image: z_})
+                    siamNet.batched_pos_x_ph: z_pos_x_,
+                    siamNet.batched_pos_y_ph: z_pos_y_,
+                    siamNet.batched_z_sz_ph: z_sz_,
+                    image: z_})
                 # visualize croped z image
                 """             
                 cv2.namedWindow('image', cv2.WINDOW_NORMAL)
@@ -105,15 +103,15 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                 scores_, loss_, _, x_crops_, summary_, distance_to_gt_ = sess.run(
                     [scores, loss,  train_step, x_crops, summary, distance_to_gt],
                     feed_dict={                       
-                        siamNet.batched_z_sz_ph: z_sz_,
-                        siamNet.batched_pos_x_ph: x_pos_x_,
-                        siamNet.batched_pos_y_ph: x_pos_y_,
-                        siamNet.batched_x_sz0_ph: x_sz_,
-                        siamNet.batched_x_sz1_ph: x_sz_,
-                        siamNet.batched_x_sz2_ph: x_sz_ * 1.02,
-                        templates_z: np.squeeze(templates_z_),
-                        image: x_,
-                        siamNet.label: label
+                    siamNet.batched_z_sz_ph: z_sz_,
+                    siamNet.batched_pos_x_ph: x_pos_x_,
+                    siamNet.batched_pos_y_ph: x_pos_y_,
+                    siamNet.batched_x_sz0_ph: x_sz_,
+                    siamNet.batched_x_sz1_ph: x_sz_,
+                    siamNet.batched_x_sz2_ph: x_sz_ * 1.02,
+                    templates_z: np.squeeze(templates_z_),
+                    image: x_,
+                    siamNet.label: label
                     })
                 
                 # visualize the output score map
@@ -125,7 +123,7 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                     plt.imshow(x_crops_[0] + 0.5)
                     plt.show()
                     plt.pause(5)
-                """
+                    """
 
 
                 # visualize croped x image
@@ -143,18 +141,18 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                     if run.write_summary:
                         summary_writer.add_summary(summary_, step)
                         summary_writer.flush()
-                                        
-                if step % 500 == 0:
-                    save_path = saver.save(sess, os.path.join(design.saver_folder, design.path_ckpt) , global_step = step)
+
+                        if step % 500 == 0:
+                            save_path = saver.save(sess, os.path.join(design.saver_folder, design.path_ckpt) , global_step = step)
                     #main(step)
 
-            except tf.errors.OutOfRangeError:
+                except tf.errors.OutOfRangeError:
                 print("End of training")  # ==> "End of dataset"
                 break
-                           
+
             # Finish off the filename queue coordinator.
-        coord.request_stop()
-        coord.join(threads)             
+            coord.request_stop()
+            coord.join(threads)             
 
 
 def _create_gt_label_final_score_sz(batch_size, final_score_sz, x_target_w_, x_target_h_, x_sz, search_sz):
@@ -166,17 +164,4 @@ def _create_gt_label_final_score_sz(batch_size, final_score_sz, x_target_w_, x_t
             for y_index in range(label_h):
                 label[i][int(final_score_sz / 2. + y_index - label_h / 2.)][int(final_score_sz / 2. + x_index - label_w / 2.)] = 1.
 
-    return label
-
-def _create_gt_label_final_half_score_sz(batch_size, final_score_sz, x_target_w_, x_target_h_, x_sz, search_sz):
-    label = [[[-1. for y_coor in range(final_score_sz)] for x_coor in range(final_score_sz)] for c in range(batch_size)]
-
-    for i in range(batch_size):
-        label_w = int(x_target_w_[i] * search_sz / x_sz[i])     // 2
-        label_h = int(x_target_h_[i] * search_sz / x_sz[i])  // 2
-        for x_index in range(label_w):
-            for y_index in range(label_h):
-                label[i][int(final_score_sz / 2. + y_index - label_h / 2.)][int(final_score_sz / 2. + x_index - label_w / 2.)] = 1.
-
-    return label
-
+                return label

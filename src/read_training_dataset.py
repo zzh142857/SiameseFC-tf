@@ -38,6 +38,7 @@ class myReader(object):
         z = tf.reshape(z, [self.resize_width, self.resize_height, self.channel])
         x = tf.cast(tf.decode_raw(features['x_raw'], tf.uint8), tf.float64)
         x = tf.reshape(x, [self.resize_width, self.resize_height, self.channel])
+        #normalize image
         x = x * (2. / 255.) - 1
         z = z * (2. / 255.) - 1
         
@@ -70,6 +71,8 @@ class myReader(object):
         # capacity must be larger than min_after_dequeue and the amount larger
         #   determines the maximum we will prefetch.  Recommendation:
         #   min_after_dequeue + (num_threads + a small safety margin) * batch_size
+        
+        #due to limited memory of my graphic card, I set the size of queue to s small number
         min_after_dequeue = 20
         capacity = min_after_dequeue + 3 * batch_size
 

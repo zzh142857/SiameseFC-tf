@@ -5,7 +5,6 @@ import tensorflow as tf
 import cv2
 import os
 import os.path
-from src.region_to_bbox import region_to_bbox_normalized
 from src.parse_arguments import parse_arguments
 
 

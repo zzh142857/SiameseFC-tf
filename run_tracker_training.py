@@ -1,24 +1,25 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import division
 import sys
 import os
 import src.siamese as siam
 from src.trainer import trainer
 from src.parse_arguments import parse_arguments
-from src.region_to_bbox import region_to_bbox
 import src.read_training_dataset 
 
 
 """
     training procedure:
     1,input z, x, pos_x, pos_y, w, d and gt of x
-    2,pad and crop z,x, generate only one version
+    2,pad and crop z,x
     3,calculate score map
     4,calculate loss
     5,bp, update variable
 """
 
 
-def main():
+def train():
     # avoid printing TF debugging information
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     # TODO: allow parameters from command line or leave everything in json files?
@@ -46,5 +47,5 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(train())
 
