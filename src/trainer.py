@@ -165,4 +165,4 @@ def _create_gt_label_final_score_sz(batch_size, final_score_sz, x_target_w_, x_t
             for y_index in range(label_h):
                 label[i][int(final_score_sz / 2. + y_index - label_h / 2.)][int(final_score_sz / 2. + x_index - label_w / 2.)] = 1.
 
-                return label
+    return label
