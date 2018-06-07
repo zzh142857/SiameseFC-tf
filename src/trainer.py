@@ -143,9 +143,9 @@ def trainer(hp, run, design, final_score_sz, batched_data, image, templates_z, s
                         summary_writer.add_summary(summary_, step)
                         summary_writer.flush()
 
-                        if step % 500 == 0:
-                            save_path = saver.save(sess, os.path.join(design.saver_folder, design.path_ckpt) , global_step = step)
-                    #main(step)
+                    if step % 500 == 0:
+                        save_path = saver.save(sess, os.path.join(design.saver_folder, design.path_ckpt) , global_step = step)
+                #main(step)
 
             except tf.errors.OutOfRangeError:
                 print("End of training")  # ==> "End of dataset"
