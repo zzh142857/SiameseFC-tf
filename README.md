@@ -15,7 +15,7 @@ Before entering the conv network, we crop **z** and **x** to certain sizes, and 
 <br>
 According to the paper, the croped **z** should contains the area of the marginal bbox on the original image, where the margin *p = (w + h) / 4*, and this marginal context will then be resized to a constant size: [*design.exemplar_sz, design.exemplar_sz*], which is [127, 127] in our training process. <br>
 <br>
-Cropping step of **x** is the same, but only all the sizes are larger by a facter: *desing.search_sz / desing_examplar_sz* and the center of cropping is the center of target position in **z** instead of **x**. In addition, cause the evaluation process needs to inference three different scales of **x** to implement the update on target scale, here in training process, we also crop three **x** samples, but with the same size. (The last sample actually has a little bit larger size due to the way we crop the image, but this doesn't matter.)
+Cropping step of **x** is the same, but only all the sizes are larger by a facter: *desing.search_sz / desing_examplar_sz* and the center of cropping is the center of target position in **x** instead of **z**. In addition, cause the evaluation process needs to inference three different scales of **x** to implement the update on target scale, here in training process, we also crop three **x** samples, but with the same size. (The last sample actually has a little bit larger size due to the way we crop the image, but this doesn't matter.)
 
 ### 2.3 Siamese conv net
 When entering the conv net, **x** tensor has a shape of [*batch_size × 3, desing.search_sz, desing.search_sz, channel*], and **z** tensor has a shape of [*batch_size, design.exemplar_sz, design.exemplar_sz, channel*]. <br>
