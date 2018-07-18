@@ -8,7 +8,7 @@ Step by step explanation of the whole model and training process.
 ### 2.1 Prepare training data
 One training sample consists of an examplar image: **z**, a search image : **x**, and their correspnding ground truth information: **z_pos_x, z_pos_y, z_target_w, z_target_h and x_pos_x, x_pos_y, x_target_w, x_target_h**. Note the coordinates of the target have been converted to the center of bbox from the lefttop corner through function *src.region_to_bbox.py*. <br>
 <br>
-We pick the neibored two images in a vedio as z and x, and get a shuffled training data set from all 78 vedios in ImageNet Large Scale Visual Recognition Competition (ILSVRC) data set. And for conveniece of later steps, we resize all images to a uniform size [*design.resize_width, design.resize_height*]. The training data set is saved in a tfrecord file.
+We pick the neibored two images in a vedio as z and x, and get a shuffled training data set from all 78 vedios in OTB2015 data set. And for conveniece of later steps, we resize all images to a uniform size [*design.resize_width, design.resize_height*]. The training data set is saved in a tfrecord file.
 
 ### 2.2 Pad & Crop the image
 Before entering the conv network, we crop **z** and **x** to certain sizes, and pad with the mean RGB value of each image if the crop region exceeds the orignal image size.<br>
