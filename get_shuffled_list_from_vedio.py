@@ -31,6 +31,7 @@ def prepare_shuffled_list(data_folder, output_filename, output_directory, num_ve
 
     #loop through all the vedio folders
     for vedio_folder in vedio_folder_list:
+        print("Reading images from " + vedio_folder);
         vedio_index += 1
         
         vedio_folder = os.path.join(data_folder, vedio_folder)
@@ -68,11 +69,12 @@ def prepare_shuffled_list(data_folder, output_filename, output_directory, num_ve
             output_list.append(z + " " + x + " " + str(z_pos_x)+ " "+ str(z_pos_y)+ " "+  str(z_target_w)+ " "+ str(z_target_h)+ " "+  str(x_pos_x)+ " "+ str(x_pos_y)+ " "+  str(x_target_w)+ " "+  str(x_target_h))
             z = x
             z_pos_x, z_pos_y, z_target_w, z_target_h = x_pos_x, x_pos_y, x_target_w, x_target_h
-    
+    print("Finished loading all the training data. Start shuffling...")
     shuffle(output_list);
     with open(os.path.join(output_directory,output_filename) + ".txt","w+") as f:
         for output_file in output_list:
-            f.write(output_file + "\n")   
+            f.write(output_file + "\n") 
+    print("Done. tfrecords file saved at " + output_directory)
         
 
     
